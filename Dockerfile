@@ -2,19 +2,12 @@
 FROM gradle:8.7-jdk21 AS builder
 WORKDIR /app
 
-# Gradle 캐싱 최적화 → 먼저 gradle 관련 파일만 복사
-COPY build.gradle settings.gradle ./
-COPY gradle gradle
-
-# 의존성 캐시 다운로드 (optional but recommended)
-RUN gradle build -x test --no-daemon || true
-
-# 나머지 프로젝트 복사
+# 전체 프로젝트 복사 (성능 문제 없고 구조 안정됨)
 COPY . .
 
-# jar 생성
-RUN gradle bootJar --no-daemon
-
+# Gradle 빌드
+RUN chmod +x gradlew
+RUN ./gradlew clean bootJar --no-daemon
 
 #### 2단계: Run Stage ####
 FROM eclipse-temurin:21-jre
